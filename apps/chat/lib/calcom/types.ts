@@ -72,6 +72,7 @@ export interface CalcomBooking {
   meetingUrl: string | null;
   location: string | null;
   absentHost: boolean;
+  recurringBookingUid: string | null;
 }
 
 export interface CreateBookingInput {
@@ -82,7 +83,23 @@ export interface CreateBookingInput {
     email: string;
     timeZone: string;
   };
-  notes?: string;
+  guests?: string[];
+  metadata?: Record<string, string>;
+  bookingFieldsResponses?: Record<string, string>;
+}
+
+export interface CreatePublicBookingInput {
+  eventTypeSlug: string;
+  username: string;
+  start: string; // ISO 8601 UTC
+  attendee: {
+    name: string;
+    email: string;
+    timeZone: string;
+  };
+  guests?: string[];
+  lengthInMinutes?: number;
+  bookingFieldsResponses?: Record<string, string>;
   metadata?: Record<string, string>;
 }
 
@@ -207,6 +224,11 @@ export interface CreateEventTypeInput {
   lengthInMinutes: number;
   description?: string;
   hidden?: boolean;
+  minimumBookingNotice?: number;
+  beforeEventBuffer?: number;
+  afterEventBuffer?: number;
+  slotInterval?: number;
+  scheduleId?: number;
 }
 
 export interface UpdateEventTypeInput {
@@ -215,6 +237,11 @@ export interface UpdateEventTypeInput {
   lengthInMinutes?: number;
   description?: string;
   hidden?: boolean;
+  minimumBookingNotice?: number;
+  beforeEventBuffer?: number;
+  afterEventBuffer?: number;
+  slotInterval?: number;
+  scheduleId?: number;
 }
 
 // ─── Calendar Links ───────────────────────────────────────────────────────────
@@ -224,6 +251,14 @@ export interface CalendarLink {
   outlook?: string;
   yahoo?: string;
   ics?: string;
+}
+
+// ─── Add Attendee ─────────────────────────────────────────────────────────────
+
+export interface AddAttendeeInput {
+  name: string;
+  email: string;
+  timeZone: string;
 }
 
 // ─── Busy Times ───────────────────────────────────────────────────────────────
