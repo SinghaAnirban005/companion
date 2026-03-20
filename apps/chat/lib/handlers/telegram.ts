@@ -794,10 +794,10 @@ export function registerTelegramHandlers(bot: Chat, deps: RegisterTelegramHandle
           const isHost =
             !fullBooking ||
             fullBooking.hosts?.some(
-              (h) => h.id === linked.calcomUserId || h.email?.toLowerCase() === emailLower
-            ) ||
-            fullBooking.organizer?.email?.toLowerCase() === emailLower ||
-            fullBooking.organizer?.id === linked.calcomUserId;
+              (h) =>
+                String(h.id) === String(linked.calcomUserId) ||
+                h.email?.toLowerCase() === emailLower
+            );
           if (!isHost) {
             await thread.post(
               "You're an attendee on this booking, not the host. Rescheduling as an attendee isn't supported here — please use the reschedule link in your booking confirmation email or reschedule at [app.cal.com/bookings](https://app.cal.com/bookings)."

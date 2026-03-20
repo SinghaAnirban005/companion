@@ -63,13 +63,6 @@ export interface CalcomBooking {
   } | null;
   hosts: CalcomBookingHost[];
   attendees: CalcomAttendee[];
-  // organizer is present in some API versions; hosts is the canonical 2024-08-13 field
-  organizer?: {
-    id: number;
-    name: string;
-    email: string;
-    timeZone: string;
-  };
   meetingUrl: string | null;
   location: string | null;
   absentHost: boolean;

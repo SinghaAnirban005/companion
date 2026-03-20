@@ -245,11 +245,7 @@ export interface BookingCurrentUser {
   email: string;
 }
 
-export async function getBookings(
-  accessToken: string,
-  params: GetBookingsParams = {},
-  currentUser?: BookingCurrentUser
-): Promise<CalcomBooking[]> {
+function buildBookingsQuery(params: GetBookingsParams): string {
   const query = new URLSearchParams();
   if (params.status) query.set("status", params.status);
   if (params.attendeeEmail) query.set("attendeeEmail", params.attendeeEmail);
@@ -259,24 +255,39 @@ export async function getBookings(
   if (params.sortStart) query.set("sortStart", params.sortStart);
   if (params.take) query.set("take", String(params.take));
   if (params.skip) query.set("skip", String(params.skip));
-  const qs = query.toString() ? `?${query}` : "";
+  return query.toString() ? `?${query}` : "";
+}
+
+export async function getBookings(
+  accessToken: string,
+  params: GetBookingsParams = {},
+  currentUser?: BookingCurrentUser
+): Promise<CalcomBooking[]> {
+  const qs = buildBookingsQuery(params);
   const bookings = await calcomFetch<CalcomBooking[]>(`/v2/bookings${qs}`, accessToken);
 
-  // Team admins see all team bookings from the API. Filter to only bookings
-  // where the current user is a host or attendee to prevent leaking other
-  // members' appointments. Matches the mobile companion app's approach.
+  // Org/team admins see all team bookings from the API. Filter to only
+  // bookings where the current user is a host or an attendee to prevent
+  // leaking other members' appointments.
+  // NOTE: For org admins the API returns a superset (personal + all team
+  // bookings) with server-side `take` applied *before* this filter, so
+  // pagination signals (`hasMore`) may be inaccurate — a known limitation
+  // until the org-scoped endpoint supports OAuth tokens.
   if (!currentUser) return bookings;
 
   const emailLower = currentUser.email.toLowerCase();
+  const idEq = (a?: string | number, b?: string | number) =>
+    a !== undefined && b !== undefined && String(a) === String(b);
+  const emailEq = (a?: string, b?: string) => a?.toLowerCase() === b?.toLowerCase();
+
   return bookings.filter((booking) => {
     const isHost = booking.hosts?.some(
-      (h) => h.id === currentUser.id || h.email?.toLowerCase() === emailLower
+      (h) => idEq(h.id, currentUser.id) || emailEq(h.email, emailLower)
     );
-    const isAttendee = booking.attendees?.some((a) => a.email?.toLowerCase() === emailLower);
-    const isOrganizer =
-      booking.organizer?.id === currentUser.id ||
-      booking.organizer?.email?.toLowerCase() === emailLower;
-    return isHost || isAttendee || isOrganizer;
+    const isAttendee = booking.attendees?.some(
+      (a) => emailEq(a.email, emailLower)
+    );
+    return isHost || isAttendee;
   });
 }
 
