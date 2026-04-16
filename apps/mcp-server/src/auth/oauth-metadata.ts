@@ -34,6 +34,9 @@ export function buildAuthorizationServerMetadata(config: OAuthServerConfig): Rec
 export function buildProtectedResourceMetadata(config: OAuthServerConfig): Record<string, unknown> {
   const serverUrl = config.serverUrl.replace(/\/+$/, "");
   return {
+    // resource is the server identifier (base URL). Per RFC 9728 §3 the client constructs
+    // the discovery URL as "https://host/.well-known/oauth-protected-resource" — no path
+    // suffix — so resource must stay as the base URL, not the /mcp endpoint path.
     resource: serverUrl,
     authorization_servers: [serverUrl],
     bearer_methods_supported: ["header"],
